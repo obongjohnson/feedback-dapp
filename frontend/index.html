@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Feedback DApp</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+</head>
+<body>
+    <h1>Feedback DApp</h1>
+    <button onclick="connectWallet()">Connect Wallet</button>
+
+    <h2>Submit Feedback</h2>
+    <textarea id="feedbackMessage" placeholder="Enter your feedback"></textarea>
+    <button onclick="submitFeedback()">Submit</button>
+
+    <h2>All Feedbacks</h2>
+    <div id="feedbackList"></div>
+
+    <script>
+        const CONTRACT_ADDRESS = "<DEPLOYED_CONTRACT_ADDRESS>";
+        const CONTRACT_ABI = [
+            {
+                "inputs": [{"internalType": "string","name": "message","type": "string"}],
+                "name": "submitFeedback",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "uint256","name": "index","type": "uint256"}],
+                "name": "getFeedback",
+                "outputs": [
+                    {
+                        "components": [
+                            {"internalType": "address","name": "user","type": "address"},
+                            {"internalType": "string","name": "message","type": "string"},
+                            {"internalType": "uint256","name": "timestamp","type": "uint256"}
+                        ],
+                        "internalType": "struct Feedback.FeedbackEntry",
+                        "name": "",
+                        "type": "tuple"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "getFeedbackCount",
+                "outputs": [{"internalType": "uint256","name": "","type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        let provider, signer, contract;
+
+        async function connectWallet() {
+            if (window.ethereum) {
+                provider = new ethers.BrowserProvider(window.ethereum);
+                signer = await provider.getSigner();
+                contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+                alert("Wallet connected!");
+                loadFeedbacks();
+            } else {
+                alert("Please install MetaMask!");
+            }
+        }
+
+        async function submitFeedback() {
+            const message = document.getElementById('feedbackMessage').value;
+            const tx = await contract.submitFeedback(message);
+            await tx.wait();
+            alert("Feedback submitted!");
+            loadFeedbacks();
+        }
+
+        async function loadFeedbacks() {
+            const count = await contract.getFeedbackCount();
+            const feedbackList = document.getElementById('feedbackList');
+            feedbackList.innerHTML = "";
+
+            for (let i = 0; i < count; i++) {
+                const feedback = await contract.getFeedback(i);
+                const item = document.createElement('div');
+                item.innerHTML = `<strong>${feedback.user}</strong>: ${feedback.message} <em>(${new Date(Number(feedback.timestamp) * 1000).toLocaleString()})</em>`;
+                feedbackList.appendChild(item);
+            }
+        }
+    </script>
+</body>
+</html>
+

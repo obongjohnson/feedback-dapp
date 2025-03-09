@@ -2,5 +2,7 @@
 src = "src"
 out = "out"
 libs = ["lib"]
+rpc_url = "https://sepolia.infura.io/v3/de7c8cbf9590456ba10a3d72022064f8"  
 
-# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+
+ 
